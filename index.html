@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>题库刷题工具</title>
+    <style>
+            .question-title-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 20px;
+            }
+
+            .bookmark-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: #ccc;
+                transition: color 0.3s ease;
+                padding: 5px;
+                margin-left: 10px;
+            }
+
+            .bookmark-btn:hover {
+                color: #f39c12;
+            }
+
+            .bookmark-btn.active {
+                color: #f39c12;
+            }
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-2px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 1.8rem;
+        }
+
+        .controls-container {
+            margin-bottom: 25px;
+            background-color: #f5f7fa;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .controls-header {
+            padding: 8px 20px;
+            background-color: #4a69bd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 40px;
+        }
+
+        .controls-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: white;
+            font-weight: 500;
+        }
+
+        .controls-content {
+            padding: 20px;
+            transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+            max-height: 500px;
+        }
+
+        .controls-content.collapsed {
+            max-height: 0;
+            padding: 0 20px;
+            overflow: hidden;
+        }
+
+        .toggle-icon {
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .controls select, .controls button {
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border: 1px solid #d1d9e6;
+            background-color: white;
+            box-sizing: border-box;
+            width: 100%;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .controls select:focus, .controls button:focus {
+            border-color: #4a69bd;
+            box-shadow: 0 0 0 2px rgba(74, 105, 189, 0.1);
+        }
+
+        @media (min-width: 600px) {
+            .controls select, .controls button {
+                width: auto;
+                margin-right: 12px;
+                margin-bottom: 0;
+            }
+        }
+
+        .question-card {
+            border: 1px solid #e1e8f0;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
+        }
+
+        .question-card:hover {
+            box-shadow: 0 6px 15px rgba(0,0,0,0.07);
+        }
+
+        .question-title {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.15rem;
+            color: #2c3e50;
+            line-height: 1.5;
+        }
+
+        .options-list {
+            margin-bottom: 20px;
+        }
+
+        .option-item {
+            margin-bottom: 12px;
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+
+        .option-item:hover {
+            background-color: #f5f7fa;
+        }
+
+        .option-item input[type="radio"], .option-item input[type="checkbox"] {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            accent-color: #4a69bd;
+        }
+
+        .option-item label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .answer-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #e1e8f0;
+        }
+
+        .btn {
+            background-color: #4a69bd;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 6px 3px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background-color: #3c57a1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(74, 105, 189, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background-color: #e74c3c;
+        }
+
+        .btn-secondary:hover {
+            background-color: #c0392b;
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.2);
+        }
+
+        .btn-neutral {
+            background-color: #3498db;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-neutral:hover {
+            background-color: #2980b9;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .correct {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .incorrect {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        #explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f5f7fa;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        #question-counter {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        /* 优化移动端显示 */
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .question-card {
+                padding: 20px;
+            }
+
+            .btn {
+                padding: 10px 15px;
+                font-size: 13px;
+            }
+        }
+    </style>
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls-container">
+        <div class="controls-header">
+            <h3>题目选择</h3>
+            <div id="toggle-icon" class="toggle-icon">▼</div>
+        </div>
+    <div class="controls-content" style="display: block;">
+            <label for="question-type">选择题型:</label>
+            <select id="question-type">
+                <option value="all">所有题型</option>
+                <option value="bookmarked">已标记题目</option>
+                <option value="single_choice">单选题</option>
+                <option value="multiple_choice">多选题</option>
+                <option value="true_false">判断题</option>
+            </select>
+
+            <label for="question-number">选择题目:</label>
+            <select id="question-number">
+                <!-- 动态生成题目选项 -->
+            </select>
+
+            <button id="random-question" class="btn btn-neutral btn-small">随机出题</button>
+                </div>
+    </div>
+
+        <div id="question-card" class="question-card">
+            <div class="question-title-container">
+                <div class="question-title" id="question-text"></div>
+                <button id="toggle-bookmark" class="bookmark-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                </button>
+            </div>
+            <div class="options-list" id="options-list"></div>
+
+            <div class="answer-section">
+                <button id="show-answer-explanation" class="btn">显示答案和解析</button>
+                <div id="answer-feedback" class="feedback hidden"></div>
+                <div id="explanation" class="hidden"></div>
+            </div>
+        </div>
+
+        <div class="pagination">
+            <button id="prev-question" class="btn">上一题</button>
+            <span id="question-counter"></span>
+            <button id="next-question" class="btn">下一题</button>
+        </div>
+    </div>
+
+    <script src="questions.js"></script>
+    <script>
+        // 存储题库数据
+        let questionData = window.questionData || {
+            single_choice: [],
+            multiple_choice: [],
+            true_false: []
+        };
+
+        // 存储已标记题目的ID集合
+        let bookmarkedQuestions = new Set();
+
+        // Cookie管理函数
+        function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + date.toUTCString();
+            document.cookie = name + "=" + value + ";" + expires + ";path=/";
+        }
+
+        function getCookie(name) {
+            const cookieName = name + "=";
+            const decodedCookie = decodeURIComponent(document.cookie);
+            const cookieArray = decodedCookie.split(';');
+            for (let i = 0; i < cookieArray.length; i++) {
+                let cookie = cookieArray[i];
+                while (cookie.charAt(0) === ' ') {
+                    cookie = cookie.substring(1);
+                }
+                if (cookie.indexOf(cookieName) === 0) {
+                    return cookie.substring(cookieName.length, cookie.length);
+                }
+            }
+            return "";
+        }
+
+        // 初始化已标记题目
+        function initBookmarks() {
+            const bookmarkedIds = getCookie('bookmarkedQuestions');
+            if (bookmarkedIds) {
+                bookmarkedIds.split(',').forEach(id => {
+                    bookmarkedQuestions.add(id);
+                });
+            }
+        }
+
+        // 切换题目标记状态
+        function toggleBookmark() {
+            if (filteredQuestions.length === 0) return;
+
+            const currentQuestion = filteredQuestions[currentQuestionIndex];
+            const questionId = currentQuestion.id;
+
+            if (bookmarkedQuestions.has(questionId)) {
+                bookmarkedQuestions.delete(questionId);
+            } else {
+                bookmarkedQuestions.add(questionId);
+            }
+
+            // 更新Cookie
+            setCookie('bookmarkedQuestions', Array.from(bookmarkedQuestions).join(','), 30);
+
+            // 更新按钮状态
+            updateBookmarkButton();
+        }
+
+        // 更新书签按钮状态
+        function updateBookmarkButton() {
+            if (filteredQuestions.length === 0) return;
+
+            const currentQuestion = filteredQuestions[currentQuestionIndex];
+            const bookmarkBtn = document.getElementById('toggle-bookmark');
+
+            if (bookmarkedQuestions.has(currentQuestion.id)) {
+                bookmarkBtn.classList.add('active');
+            } else {
+                bookmarkBtn.classList.remove('active');
+            }
+        }
+
+        // 当前显示的题目索引
+        let currentQuestionIndex = 0;
+        // 当前选中的题型
+        let currentQuestionType = 'all';
+        // 过滤后的题目列表
+        let filteredQuestions = [];
+
+        // 加载题库数据
+        function loadQuestions() {
+            try {
+                initQuestionSelector();
+                filterQuestions();
+                displayQuestion(currentQuestionIndex);
+            } catch (error) {
+                document.getElementById('question-text').textContent = '加载题库失败: ' + error.message;
+            }
+        }
+
+        // 初始化题目选择器
+        function initQuestionSelector() {
+            const selector = document.getElementById('question-number');
+            selector.innerHTML = '';
+
+            // 先计算总题目数
+            const totalCount = Object.values(questionData).reduce((sum, type) => sum + type.length, 0);
+
+            for (let i = 0; i < totalCount; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `第 ${i + 1} 题`;
+                selector.appendChild(option);
+            }
+        }
+
+        // 过滤题目
+        function filterQuestions() {
+            const type = document.getElementById('question-type').value;
+            currentQuestionType = type;
+
+            if (type === 'all') {
+                filteredQuestions = [
+                    ...questionData.single_choice.map(q => ({...q, type: 'single_choice'})),
+                    ...questionData.multiple_choice.map(q => ({...q, type: 'multiple_choice'})),
+                    ...questionData.true_false.map(q => ({...q, type: 'true_false'}))
+                ];
+            } else if (type === 'bookmarked') {
+                // 过滤已标记题目
+                filteredQuestions = [
+                    ...questionData.single_choice.map(q => ({...q, type: 'single_choice'})),
+                    ...questionData.multiple_choice.map(q => ({...q, type: 'multiple_choice'})),
+                    ...questionData.true_false.map(q => ({...q, type: 'true_false'}))
+                ].filter(q => bookmarkedQuestions.has(q.id));
+            } else {
+                filteredQuestions = questionData[type].map(q => ({...q, type}));
+            }
+
+            // 重置当前索引
+            currentQuestionIndex = 0;
+
+            // 更新题目计数器
+            updateQuestionCounter();
+        }
+
+        // 显示题目
+        function displayQuestion(index) {
+            if (index < 0 || index >= filteredQuestions.length) {
+                return;
+            }
+
+            const question = filteredQuestions[index];
+            const questionText = document.getElementById('question-text');
+            const optionsList = document.getElementById('options-list');
+            const answerFeedback = document.getElementById('answer-feedback');
+            const explanation = document.getElementById('explanation');
+
+            // 重置反馈和解析
+            answerFeedback.classList.add('hidden');
+            explanation.classList.add('hidden');
+
+            // 显示题目
+            questionText.textContent = question.question;
+
+            // 更新书签按钮状态
+            updateBookmarkButton();
+
+            // 生成选项
+            optionsList.innerHTML = '';
+
+            if (question.type === 'true_false') {
+                // 判断题
+                question.options.forEach((option, i) => {
+                    const optionItem = document.createElement('div');
+                    optionItem.className = 'option-item';
+
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'question-option';
+                    radio.value = i === 0 ? 'true' : 'false';
+
+                    const label = document.createElement('label');
+                    label.appendChild(radio);
+                    label.appendChild(document.createTextNode(option));
+
+                    optionItem.appendChild(label);
+                    optionsList.appendChild(optionItem);
+                });
+            } else if (question.type === 'multiple_choice') {
+                // 多选题
+                question.options.forEach((option, i) => {
+                    const optionItem = document.createElement('div');
+                    optionItem.className = 'option-item';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = 'question-option';
+                    checkbox.value = String.fromCharCode(65 + i); // A, B, C...
+
+                    const label = document.createElement('label');
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(`${String.fromCharCode(65 + i)}. ${option}`));
+
+                    optionItem.appendChild(label);
+                    optionsList.appendChild(optionItem);
+                });
+            } else {
+                // 单选题
+                question.options.forEach((option, i) => {
+                    const optionItem = document.createElement('div');
+                    optionItem.className = 'option-item';
+
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'question-option';
+                    radio.value = String.fromCharCode(65 + i); // A, B, C...
+
+                    const label = document.createElement('label');
+                    label.appendChild(radio);
+                    label.appendChild(document.createTextNode(`${String.fromCharCode(65 + i)}. ${option}`));
+
+                    optionItem.appendChild(label);
+                    optionsList.appendChild(optionItem);
+                });
+            }
+
+            // 更新题目计数器
+            updateQuestionCounter();
+        }
+
+        // 更新题目计数器和题目选择器
+        function updateQuestionCounter() {
+            const counter = document.getElementById('question-counter');
+            counter.textContent = `(${currentQuestionIndex + 1}/${filteredQuestions.length})`;
+
+            // 更新题目选择器
+            const selector = document.getElementById('question-number');
+            selector.innerHTML = '';
+
+            filteredQuestions.forEach((q, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `第 ${index + 1} 题`;
+                if (index === currentQuestionIndex) {
+                    option.selected = true;
+                }
+                selector.appendChild(option);
+            });
+        }
+
+        // 显示答案和解析
+        function showAnswerExplanation() {
+            const question = filteredQuestions[currentQuestionIndex];
+            const answerFeedback = document.getElementById('answer-feedback');
+            const explanation = document.getElementById('explanation');
+            const selectedOptions = document.querySelectorAll('input[name="question-option"]:checked');
+
+            // 显示答案
+            let userAnswer = [];
+            if (question.type === 'true_false') {
+                userAnswer = selectedOptions.length > 0 ? (selectedOptions[0].value === 'true') : null;
+            } else if (question.type === 'multiple_choice') {
+                userAnswer = Array.from(selectedOptions).map(option => option.value);
+            } else {
+                userAnswer = selectedOptions.length > 0 ? selectedOptions[0].value : null;
+            }
+
+            // 检查答案
+            let isCorrect = false;
+            if (question.type === 'true_false') {
+                isCorrect = userAnswer === question.answer;
+            } else if (question.type === 'multiple_choice') {
+                // 多选题需要检查所有选项是否匹配
+                if (userAnswer.length !== question.answer.length) {
+                    isCorrect = false;
+                } else {
+                    isCorrect = userAnswer.every(option => question.answer.includes(option));
+                }
+            } else {
+                isCorrect = userAnswer === question.answer;
+            }
+
+            // 显示反馈
+            answerFeedback.classList.remove('hidden', 'correct', 'incorrect');
+            if (isCorrect) {
+                answerFeedback.classList.add('correct');
+                answerFeedback.textContent = '回答正确！';
+            } else {
+                answerFeedback.classList.add('incorrect');
+                let correctAnswerText = '';
+                if (question.type === 'true_false') {
+                    correctAnswerText = question.answer ? '正确' : '错误';
+                } else if (question.type === 'multiple_choice') {
+                    correctAnswerText = question.answer.join(', ');
+                } else {
+                    correctAnswerText = question.answer;
+                }
+                answerFeedback.textContent = `回答错误！正确答案是: ${correctAnswerText}`;
+            }
+
+            // 显示解析
+            explanation.classList.remove('hidden');
+            explanation.textContent = `解析: ${question.explanation || '暂无解析'}`;
+        }
+
+        // 绑定事件
+        document.addEventListener('DOMContentLoaded', () => {
+            // 折叠/展开控制
+            const toggleIcon = document.getElementById('toggle-icon');
+            const controlsContent = document.querySelector('.controls-content');
+
+            toggleIcon.addEventListener('click', () => {
+                controlsContent.classList.toggle('collapsed');
+                toggleIcon.classList.toggle('rotated');
+            });
+
+            // 初始化书签
+            initBookmarks();
+
+            // 加载题库
+            loadQuestions();
+
+            // 绑定标记按钮点击事件
+            document.getElementById('toggle-bookmark').addEventListener('click', toggleBookmark);
+
+            // 题型选择变化
+            document.getElementById('question-type').addEventListener('change', () => {
+                filterQuestions();
+                displayQuestion(currentQuestionIndex);
+            });
+
+            // 题目选择变化
+            document.getElementById('question-number').addEventListener('change', (e) => {
+                currentQuestionIndex = parseInt(e.target.value);
+                displayQuestion(currentQuestionIndex);
+            });
+
+            // 显示答案和解析
+            document.getElementById('show-answer-explanation').addEventListener('click', showAnswerExplanation);
+
+            // 上一题
+            document.getElementById('prev-question').addEventListener('click', () => {
+                if (currentQuestionIndex > 0) {
+                    currentQuestionIndex--;
+                    displayQuestion(currentQuestionIndex);
+                }
+            });
+
+            // 下一题
+            document.getElementById('next-question').addEventListener('click', () => {
+                if (currentQuestionIndex < filteredQuestions.length - 1) {
+                    currentQuestionIndex++;
+                    displayQuestion(currentQuestionIndex);
+                }
+            });
+
+            // 随机出题
+            document.getElementById('random-question').addEventListener('click', () => {
+                if (filteredQuestions.length > 0) {
+                    currentQuestionIndex = Math.floor(Math.random() * filteredQuestions.length);
+                    displayQuestion(currentQuestionIndex);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
